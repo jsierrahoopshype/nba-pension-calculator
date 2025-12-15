@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Retirement Benefits Calculator | HoopsHype</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #C9082A;
+            --primary-dark: #8B0000;
+            --secondary: #1D428A;
+            --gold: #FDB927;
+            --dark: #0d1117;
+            --darker: #010409;
+            --card: #161b22;
+            --border: #30363d;
+            --text: #e6edf3;
+            --text-muted: #8b949e;
+            --success: #2ea043;
+            --warning: #d29922;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: var(--darker);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--dark) 0%, var(--darker) 50%, var(--secondary) 100%);
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            letter-spacing: 3px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 8px;
+        }
+
+        .hero h1 span {
+            color: var(--gold);
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .hero .source {
+            font-size: 0.75rem;
+            margin-top: 8px;
+            color: var(--text-muted);
+        }
+
+        .hero .source a {
+            color: var(--gold);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Search Section - Now at top */
+        .search-section {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .search-box {
+            position: relative;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 14px 20px 14px 50px;
+            font-size: 1.1rem;
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            background: var(--dark);
+            color: var(--text);
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(201, 8, 42, 0.3);
+        }
+
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--card);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--primary);
+            color: var(--text);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--card) 0%, var(--dark) 100%);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-card .number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            color: var(--gold);
+            line-height: 1;
+        }
+
+        .stat-card .label {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+
+        /* Pension Rankings */
+        .rankings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .rankings-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            color: var(--gold);
+            letter-spacing: 1px;
+        }
+
+        .rankings-subtitle {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Player Ranking Row */
+        .ranking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .ranking-row {
+            background: var(--card);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .ranking-row:hover {
+            border-color: var(--primary);
+            transform: translateX(4px);
+        }
+
+        .ranking-row.expanded {
+            border-color: var(--gold);
+        }
+
+        .ranking-main {
+            display: grid;
+            grid-template-columns: 50px 1fr 100px 120px 140px;
+            align-items: center;
+            padding: 14px 16px;
+            gap: 12px;
+        }
+
+        .rank-number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .ranking-row:nth-child(1) .rank-number { color: #FFD700; }
+        .ranking-row:nth-child(2) .rank-number { color: #C0C0C0; }
+        .ranking-row:nth-child(3) .rank-number { color: #CD7F32; }
+
+        .player-info {
+            min-width: 0;
+        }
+
+        .player-info .name {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-info .meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .years-badge {
+            background: var(--secondary);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .current-age {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        .pension-amount {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3rem;
+            color: var(--gold);
+            text-align: right;
+        }
+
+        .pension-amount .year-label {
+            font-family: 'Open Sans', sans-serif;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        /* Expanded Year-by-Year Schedule */
+        .year-schedule {
+            display: none;
+            background: var(--dark);
+            border-top: 1px solid var(--border);
+            padding: 16px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .ranking-row.expanded .year-schedule {
+            display: block;
+        }
+
+        .schedule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .schedule-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1rem;
+            color: var(--text);
+            letter-spacing: 0.5px;
+        }
+
+        .schedule-total {
+            font-size: 0.85rem;
+            color: var(--gold);
+        }
+
+        .year-row {
+            display: grid;
+            grid-template-columns: 80px 1fr 120px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .year-row:nth-child(odd) {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .year-row.current-year {
+            background: rgba(253, 185, 39, 0.15);
+            border: 1px solid var(--gold);
+        }
+
+        .year-row.future {
+            opacity: 0.7;
+        }
+
+        .year-row .year {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
+
+        .year-row.current-year .year {
+            color: var(--gold);
+        }
+
+        .year-row .age-info {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .year-row .amount {
+            font-weight: 700;
+            color: var(--success);
+            text-align: right;
+            font-size: 1rem;
+        }
+
+        .year-row.future .amount {
+            color: var(--text-muted);
+        }
+
+        .year-row.current-year .amount {
+            color: var(--gold);
+            font-size: 1.1rem;
+        }
+
+        /* Benefits Info */
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .benefit-card {
+            background: linear-gradient(135deg, var(--card) 0%, var(--dark) 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .benefit-card h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            color: var(--gold);
+            margin-bottom: 12px;
+        }
+
+        .benefit-card ul {
+            list-style: none;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .benefit-card li {
+            padding: 5px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .benefit-card li:last-child {
+            border-bottom: none;
+        }
+
+        .benefit-card .highlight {
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        /* Pension Scale */
+        .pension-scale {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .pension-scale h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            color: var(--gold);
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .scale-table {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 6px;
+        }
+
+        .scale-item {
+            text-align: center;
+            padding: 10px 6px;
+            background: var(--dark);
+            border-radius: 6px;
+        }
+
+        .scale-item .years {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .scale-item .amount {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1rem;
+            color: var(--gold);
+        }
+
+        .scale-item.max {
+            background: rgba(253, 185, 39, 0.15);
+            border: 1px solid var(--gold);
+        }
+
+        /* Load More */
+        .load-more {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            margin-top: 16px;
+            background: var(--card);
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            color: var(--primary);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .load-more:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .disclaimer {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 24px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .disclaimer h4 {
+            color: var(--text);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .ranking-main {
+                grid-template-columns: 40px 1fr 80px;
+            }
+            
+            .current-age, .years-badge {
+                display: none;
+            }
+
+            .year-row {
+                grid-template-columns: 60px 1fr 100px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 12px;
+            }
+            
+            .tab-nav {
+                flex-direction: column;
+            }
+            
+            .tab-btn {
+                width: 100%;
+            }
+
+            .ranking-main {
+                grid-template-columns: 35px 1fr 90px;
+                padding: 12px;
+            }
+
+            .player-info .name {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="hero-content">
+            <h1>NBA <span>PENSION</span> CALCULATOR</h1>
+            <p>Year-by-year pension estimates for every NBA player based on the 2024 CBA</p>
+            <div class="source">Source: <a href="https://www.momentprivatewealth.com/post/nba-retirement-plan-2024-edition" target="_blank">Moment Private Wealth</a></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Search at TOP -->
+        <div class="search-section">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search any NBA player...">
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+            <button class="tab-btn active" data-tab="rankings">💰 Pension Rankings</button>
+            <button class="tab-btn" data-tab="all-players">📋 All Players</button>
+            <button class="tab-btn" data-tab="info">ℹ️ Benefits Info</button>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="number" id="totalCollecting">-</div>
+                <div class="label">Collecting Now (45+)</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="maxBenefitCount">-</div>
+                <div class="label">Max Benefit (62+)</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="totalEligible">-</div>
+                <div class="label">Total Eligible</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="totalPayout">-</div>
+                <div class="label">Est. Annual Payouts</div>
+            </div>
+        </div>
+
+        <!-- Rankings Tab -->
+        <div class="tab-content active" id="tab-rankings">
+            <div class="rankings-header">
+                <div>
+                    <div class="rankings-title">🏆 Top Pension Earners (2025)</div>
+                    <div class="rankings-subtitle">Players currently eligible to collect pension benefits</div>
+                </div>
+            </div>
+            <div class="ranking-list" id="rankingList">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading pension data...</p>
+                </div>
+            </div>
+            <button class="load-more" id="loadMoreRankings" style="display: none;">Load More Players</button>
+        </div>
+
+        <!-- All Players Tab -->
+        <div class="tab-content" id="tab-all-players">
+            <div class="rankings-header">
+                <div>
+                    <div class="rankings-title">All NBA Players</div>
+                    <div class="rankings-subtitle">Complete database of pension eligibility</div>
+                </div>
+            </div>
+            <div class="ranking-list" id="allPlayersList">
+            </div>
+            <button class="load-more" id="loadMoreAll" style="display: none;">Load More Players</button>
+        </div>
+
+        <!-- Info Tab -->
+        <div class="tab-content" id="tab-info">
+            <div class="pension-scale">
+                <h3>📊 Annual Pension at Age 62 by Years of Service</h3>
+                <div class="scale-table">
+                    <div class="scale-item">
+                        <div class="years">3 Years</div>
+                        <div class="amount">$56,988</div>
+                    </div>
+                    <div class="scale-item">
+                        <div class="years">4 Years</div>
+                        <div class="amount">$79,561</div>
+                    </div>
+                    <div class="scale-item">
+                        <div class="years">5 Years</div>
+                        <div class="amount">$102,134</div>
+                    </div>
+                    <div class="scale-item">
+                        <div class="years">6 Years</div>
+                        <div class="amount">$124,707</div>
+                    </div>
+                    <div class="scale-item">
+                        <div class="years">7 Years</div>
+                        <div class="amount">$147,281</div>
+                    </div>
+                    <div class="scale-item">
+                        <div class="years">8 Years</div>
+                        <div class="amount">$169,854</div>
+                    </div>
+                    <div class="scale-item">
+                        <div class="years">9 Years</div>
+                        <div class="amount">$192,427</div>
+                    </div>
+                    <div class="scale-item max">
+                        <div class="years">10+ Years</div>
+                        <div class="amount">$215,000</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <h3>💰 Pension Plan</h3>
+                    <ul>
+                        <li>Requires <span class="highlight">3+ Years of Service</span></li>
+                        <li>Can start at <span class="highlight">age 45</span> (reduced)</li>
+                        <li>Full benefit at <span class="highlight">age 62</span></li>
+                        <li>3 years = <span class="highlight">$56,988/year</span></li>
+                        <li>10+ years = <span class="highlight">$215,000/year</span></li>
+                    </ul>
+                </div>
+                <div class="benefit-card">
+                    <h3>📈 401(k) Plan</h3>
+                    <ul>
+                        <li>NBA matches <span class="highlight">140%</span></li>
+                        <li>2024 max: <span class="highlight">$23,000</span></li>
+                        <li>Max match: <span class="highlight">$32,200/yr</span></li>
+                        <li>Pre-tax & after-tax options</li>
+                    </ul>
+                </div>
+                <div class="benefit-card">
+                    <h3>🎓 Other Benefits</h3>
+                    <ul>
+                        <li>Tuition: <span class="highlight">$62,500/year</span></li>
+                        <li>Health Reimbursement (HRA)</li>
+                        <li>Life & disability insurance</li>
+                        <li>Medical, dental, vision</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="disclaimer">
+            <h4>⚠️ Disclaimer</h4>
+            <p>Estimates based on 2024 CBA data. Early retirement factors are actuarial estimates. Actual benefits may vary. Consult NBPA or a financial advisor for accurate projections.</p>
+        </div>
+    </div>
+
+    <script>
+        const CURRENT_YEAR = 2025;
+        const AGE_FACTORS = { 45: 0.36, 50: 0.50, 55: 0.68, 62: 1.00 };
+        
+        let allPlayers = [];
+        let rankingPlayers = [];
+        let filteredRankings = [];
+        let filteredAll = [];
+        let displayedRankings = 0;
+        let displayedAll = 0;
+        const BATCH_SIZE = 50;
+
+        function formatCurrency(num) {
+            if (!num || num === 0) return '-';
+            return '$' + num.toLocaleString('en-US', { maximumFractionDigits: 0 });
+        }
+
+        function formatCurrencyShort(num) {
+            if (!num) return '-';
+            if (num >= 1000000000) return '$' + (num / 1000000000).toFixed(1) + 'B';
+            if (num >= 1000000) return '$' + (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return '$' + (num / 1000).toFixed(0) + 'K';
+            return '$' + num.toLocaleString();
+        }
+
+        // Calculate pension for a specific age
+        function getPensionAtAge(pensionAt62, age) {
+            if (age >= 62) return pensionAt62;
+            if (age >= 55) return pensionAt62 * (AGE_FACTORS[55] + (AGE_FACTORS[62] - AGE_FACTORS[55]) * (age - 55) / 7);
+            if (age >= 50) return pensionAt62 * (AGE_FACTORS[50] + (AGE_FACTORS[55] - AGE_FACTORS[50]) * (age - 50) / 5);
+            if (age >= 45) return pensionAt62 * (AGE_FACTORS[45] + (AGE_FACTORS[50] - AGE_FACTORS[45]) * (age - 45) / 5);
+            return 0;
+        }
+
+        // Generate year-by-year pension schedule
+        function generatePensionSchedule(player) {
+            if (!player.e || !player.b) return [];
+            
+            const birthYear = parseInt(player.b.split('-')[0]);
+            const startAge = 45;
+            const endAge = 85; // Show until 85
+            const schedule = [];
+            
+            for (let age = startAge; age <= endAge; age++) {
+                const year = birthYear + age;
+                const amount = getPensionAtAge(player['62'], age);
+                const isPast = year < CURRENT_YEAR;
+                const isCurrent = year === CURRENT_YEAR;
+                const isFuture = year > CURRENT_YEAR;
+                const canCollect = player.a >= age || isFuture;
+                
+                // Only show if they could be collecting (age 45+)
+                if (year >= birthYear + 45) {
+                    schedule.push({
+                        year,
+                        age,
+                        amount: Math.round(amount),
+                        isPast,
+                        isCurrent,
+                        isFuture,
+                        status: age >= 62 ? 'Max Benefit' : 'Early Retirement'
+                    });
+                }
+            }
+            
+            return schedule;
+        }
+
+        // Get current year pension amount
+        function getCurrentPension(player) {
+            if (!player.e || !player.a || player.a < 45) return 0;
+            return getPensionAtAge(player['62'], Math.min(player.a, 62));
+        }
+
+        function createRankingRow(player, rank) {
+            const currentPension = getCurrentPension(player);
+            const schedule = generatePensionSchedule(player);
+            
+            // Calculate total collected and future
+            let totalCollected = 0;
+            let totalFuture = 0;
+            schedule.forEach(s => {
+                if (s.isPast || s.isCurrent) totalCollected += s.amount;
+                if (s.isFuture) totalFuture += s.amount;
+            });
+
+            const scheduleHtml = schedule.slice(0, 30).map(s => `
+                <div class="year-row ${s.isCurrent ? 'current-year' : ''} ${s.isFuture ? 'future' : ''}">
+                    <div class="year">${s.year}</div>
+                    <div class="age-info">Age ${s.age} • ${s.status}</div>
+                    <div class="amount">${formatCurrency(s.amount)}</div>
+                </div>
+            `).join('');
+
+            return `
+                <div class="ranking-row" data-player="${player.n}">
+                    <div class="ranking-main">
+                        <div class="rank-number">${rank}</div>
+                        <div class="player-info">
+                            <div class="name">${player.n}</div>
+                            <div class="meta">${player.f || '?'}-${player.l || '?'} • ${player.po || '-'}</div>
+                        </div>
+                        <div class="years-badge">${player.y} yrs</div>
+                        <div class="current-age">Age ${player.a ? player.a.toFixed(0) : '?'}</div>
+                        <div class="pension-amount">
+                            ${formatCurrency(currentPension)}
+                            <span class="year-label">${CURRENT_YEAR} pension</span>
+                        </div>
+                    </div>
+                    <div class="year-schedule">
+                        <div class="schedule-header">
+                            <div class="schedule-title">📅 Year-by-Year Pension Schedule</div>
+                            <div class="schedule-total">Est. Lifetime: ${formatCurrencyShort(totalCollected + totalFuture)}</div>
+                        </div>
+                        ${scheduleHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function createAllPlayerRow(player, rank) {
+            const currentPension = player.cc ? getCurrentPension(player) : 0;
+            const schedule = generatePensionSchedule(player);
+            
+            let scheduleHtml = '';
+            if (player.e && schedule.length > 0) {
+                scheduleHtml = schedule.slice(0, 25).map(s => `
+                    <div class="year-row ${s.isCurrent ? 'current-year' : ''} ${s.isFuture ? 'future' : ''}">
+                        <div class="year">${s.year}</div>
+                        <div class="age-info">Age ${s.age} • ${s.status}</div>
+                        <div class="amount">${formatCurrency(s.amount)}</div>
+                    </div>
+                `).join('');
+            } else if (!player.e) {
+                scheduleHtml = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">Not eligible for pension (less than 3 years of service)</div>';
+            } else {
+                scheduleHtml = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">Birth date unknown - cannot calculate schedule</div>';
+            }
+
+            const statusText = player.cc ? formatCurrency(currentPension) : (player.e ? 'Not yet 45' : 'Not eligible');
+            const statusClass = player.cc ? 'pension-amount' : 'current-age';
+
+            return `
+                <div class="ranking-row" data-player="${player.n}">
+                    <div class="ranking-main">
+                        <div class="rank-number">${rank}</div>
+                        <div class="player-info">
+                            <div class="name">${player.n}</div>
+                            <div class="meta">${player.f || '?'}-${player.l || '?'} • ${player.y} seasons</div>
+                        </div>
+                        <div class="years-badge">${player.y} yrs</div>
+                        <div class="current-age">Age ${player.a ? player.a.toFixed(0) : '?'}</div>
+                        <div class="${statusClass}">
+                            ${statusText}
+                            ${player.cc ? '<span class="year-label">' + CURRENT_YEAR + '</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="year-schedule">
+                        <div class="schedule-header">
+                            <div class="schedule-title">📅 Pension Schedule</div>
+                        </div>
+                        ${scheduleHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRankings(reset = false) {
+            const list = document.getElementById('rankingList');
+            const btn = document.getElementById('loadMoreRankings');
+            
+            if (reset) {
+                displayedRankings = 0;
+                list.innerHTML = '';
+            }
+
+            if (filteredRankings.length === 0) {
+                list.innerHTML = '<div class="no-results"><p>No players found</p></div>';
+                btn.style.display = 'none';
+                return;
+            }
+
+            const batch = filteredRankings.slice(displayedRankings, displayedRankings + BATCH_SIZE);
+            const html = batch.map((p, i) => createRankingRow(p, displayedRankings + i + 1)).join('');
+            
+            if (reset) {
+                list.innerHTML = html;
+            } else {
+                list.insertAdjacentHTML('beforeend', html);
+            }
+            
+            displayedRankings += batch.length;
+            btn.style.display = displayedRankings < filteredRankings.length ? 'block' : 'none';
+            
+            bindRowClicks();
+        }
+
+        function renderAllPlayers(reset = false) {
+            const list = document.getElementById('allPlayersList');
+            const btn = document.getElementById('loadMoreAll');
+            
+            if (reset) {
+                displayedAll = 0;
+                list.innerHTML = '';
+            }
+
+            if (filteredAll.length === 0) {
+                list.innerHTML = '<div class="no-results"><p>No players found</p></div>';
+                btn.style.display = 'none';
+                return;
+            }
+
+            const batch = filteredAll.slice(displayedAll, displayedAll + BATCH_SIZE);
+            const html = batch.map((p, i) => createAllPlayerRow(p, displayedAll + i + 1)).join('');
+            
+            if (reset) {
+                list.innerHTML = html;
+            } else {
+                list.insertAdjacentHTML('beforeend', html);
+            }
+            
+            displayedAll += batch.length;
+            btn.style.display = displayedAll < filteredAll.length ? 'block' : 'none';
+            
+            bindRowClicks();
+        }
+
+        function bindRowClicks() {
+            document.querySelectorAll('.ranking-row:not([data-bound])').forEach(row => {
+                row.setAttribute('data-bound', 'true');
+                row.addEventListener('click', () => {
+                    row.classList.toggle('expanded');
+                });
+            });
+        }
+
+        function filterData() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            
+            filteredRankings = rankingPlayers.filter(p => 
+                p.n.toLowerCase().includes(search)
+            );
+            
+            filteredAll = allPlayers.filter(p => 
+                p.n.toLowerCase().includes(search)
+            );
+            
+            renderRankings(true);
+            renderAllPlayers(true);
+        }
+
+        function updateStats() {
+            const collecting = allPlayers.filter(p => p.cc && p.e);
+            const maxBenefit = allPlayers.filter(p => p.a >= 62 && p.e);
+            const eligible = allPlayers.filter(p => p.e);
+            
+            let totalPayout = 0;
+            collecting.forEach(p => {
+                totalPayout += getCurrentPension(p);
+            });
+
+            document.getElementById('totalCollecting').textContent = collecting.length.toLocaleString();
+            document.getElementById('maxBenefitCount').textContent = maxBenefit.length.toLocaleString();
+            document.getElementById('totalEligible').textContent = eligible.length.toLocaleString();
+            document.getElementById('totalPayout').textContent = formatCurrencyShort(totalPayout);
+        }
+
+        async function init() {
+            try {
+                const response = await fetch('pension_data.json');
+                if (response.ok) {
+                    allPlayers = await response.json();
+                } else {
+                    throw new Error('Could not load');
+                }
+            } catch (e) {
+                document.getElementById('rankingList').innerHTML = 
+                    '<div class="no-results"><p>Could not load data. Ensure pension_data.json is available.</p></div>';
+                return;
+            }
+
+            // Filter for ranking: eligible, can collect now (45+), sorted by current pension
+            rankingPlayers = allPlayers
+                .filter(p => p.e && p.cc && p.a >= 45)
+                .map(p => ({ ...p, currentPension: getCurrentPension(p) }))
+                .sort((a, b) => b.currentPension - a.currentPension);
+
+            filteredRankings = [...rankingPlayers];
+            filteredAll = [...allPlayers];
+
+            updateStats();
+            renderRankings(true);
+            renderAllPlayers(true);
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', filterData);
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        document.getElementById('loadMoreRankings').addEventListener('click', () => renderRankings(false));
+        document.getElementById('loadMoreAll').addEventListener('click', () => renderAllPlayers(false));
+
+        init();
+    </script>
+</body>
+</html>
