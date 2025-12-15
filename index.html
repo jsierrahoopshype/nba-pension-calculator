@@ -21,6 +21,7 @@
             --text-muted: #8b949e;
             --success: #2ea043;
             --warning: #d29922;
+            --deceased: #6e7681;
         }
 
         * {
@@ -183,7 +184,7 @@
         /* Stats Bar */
         .stats-bar {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 12px;
             margin-bottom: 20px;
         }
@@ -191,25 +192,25 @@
         .stat-card {
             background: linear-gradient(135deg, var(--card) 0%, var(--dark) 100%);
             border-radius: 10px;
-            padding: 16px;
+            padding: 14px;
             text-align: center;
             border: 1px solid var(--border);
         }
 
         .stat-card .number {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             color: var(--gold);
             line-height: 1;
         }
 
         .stat-card .label {
             color: var(--text-muted);
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             margin-top: 4px;
         }
 
-        /* Pension Rankings */
+        /* Rankings */
         .rankings-header {
             display: flex;
             justify-content: space-between;
@@ -254,6 +255,16 @@
 
         .ranking-row.expanded {
             border-color: var(--gold);
+        }
+
+        .ranking-row.deceased {
+            opacity: 0.85;
+        }
+
+        .ranking-row.deceased .player-info .name::after {
+            content: ' ✝';
+            color: var(--deceased);
+            font-size: 0.8em;
         }
 
         .ranking-main {
@@ -304,9 +315,13 @@
         }
 
         .current-age {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
             text-align: center;
+        }
+
+        .current-age.deceased-age {
+            color: var(--deceased);
         }
 
         .pension-amount {
@@ -321,6 +336,14 @@
             font-size: 0.65rem;
             color: var(--text-muted);
             display: block;
+        }
+
+        .pension-amount.total-collected {
+            color: var(--success);
+        }
+
+        .pension-amount.total-collected .year-label {
+            color: var(--success);
         }
 
         /* Expanded Year-by-Year Schedule */
@@ -358,6 +381,20 @@
             color: var(--gold);
         }
 
+        .death-notice {
+            background: rgba(110, 118, 129, 0.2);
+            border: 1px solid var(--deceased);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .death-notice strong {
+            color: var(--text);
+        }
+
         .year-row {
             display: grid;
             grid-template-columns: 80px 1fr 120px;
@@ -377,7 +414,17 @@
         }
 
         .year-row.future {
-            opacity: 0.7;
+            opacity: 0.6;
+        }
+
+        .year-row.not-collected {
+            opacity: 0.4;
+            text-decoration: line-through;
+        }
+
+        .year-row.death-year {
+            background: rgba(110, 118, 129, 0.2);
+            border: 1px solid var(--deceased);
         }
 
         .year-row .year {
@@ -409,6 +456,10 @@
         .year-row.current-year .amount {
             color: var(--gold);
             font-size: 1.1rem;
+        }
+
+        .year-row.not-collected .amount {
+            color: var(--deceased);
         }
 
         /* Benefits Info */
@@ -629,11 +680,11 @@
         <div class="stats-bar">
             <div class="stat-card">
                 <div class="number" id="totalCollecting">-</div>
-                <div class="label">Collecting Now (45+)</div>
+                <div class="label">Collecting Now</div>
             </div>
             <div class="stat-card">
-                <div class="number" id="maxBenefitCount">-</div>
-                <div class="label">Max Benefit (62+)</div>
+                <div class="number" id="deceasedCollected">-</div>
+                <div class="label">Deceased (Collected)</div>
             </div>
             <div class="stat-card">
                 <div class="number" id="totalEligible">-</div>
@@ -641,7 +692,7 @@
             </div>
             <div class="stat-card">
                 <div class="number" id="totalPayout">-</div>
-                <div class="label">Est. Annual Payouts</div>
+                <div class="label">Est. 2025 Payouts</div>
             </div>
         </div>
 
@@ -650,7 +701,7 @@
             <div class="rankings-header">
                 <div>
                     <div class="rankings-title">🏆 Top Pension Earners (2025)</div>
-                    <div class="rankings-subtitle">Players currently eligible to collect pension benefits</div>
+                    <div class="rankings-subtitle">Players currently collecting • ✝ = Deceased</div>
                 </div>
             </div>
             <div class="ranking-list" id="rankingList">
@@ -667,7 +718,7 @@
             <div class="rankings-header">
                 <div>
                     <div class="rankings-title">All NBA Players</div>
-                    <div class="rankings-subtitle">Complete database of pension eligibility</div>
+                    <div class="rankings-subtitle">Complete database • ✝ = Deceased</div>
                 </div>
             </div>
             <div class="ranking-list" id="allPlayersList">
@@ -789,66 +840,112 @@
 
         // Generate year-by-year pension schedule
         function generatePensionSchedule(player) {
-            if (!player.e || !player.b) return [];
+            if (!player.e || !player.b) return { schedule: [], totalCollected: 0, totalMissed: 0 };
             
             const birthYear = parseInt(player.b.split('-')[0]);
+            const deathYear = player.d || null;
             const startAge = 45;
-            const endAge = 85; // Show until 85
+            const endAge = deathYear ? (deathYear - birthYear) : 85;
             const schedule = [];
+            let totalCollected = 0;
+            let totalMissed = 0;
             
-            for (let age = startAge; age <= endAge; age++) {
+            for (let age = startAge; age <= Math.min(endAge, 85); age++) {
                 const year = birthYear + age;
                 const amount = getPensionAtAge(player['62'], age);
                 const isPast = year < CURRENT_YEAR;
                 const isCurrent = year === CURRENT_YEAR;
                 const isFuture = year > CURRENT_YEAR;
-                const canCollect = player.a >= age || isFuture;
+                const isDeathYear = deathYear && year === deathYear;
+                const isAfterDeath = deathYear && year > deathYear;
                 
-                // Only show if they could be collecting (age 45+)
-                if (year >= birthYear + 45) {
+                // Determine if this was/will be collected
+                let collected = false;
+                if (deathYear) {
+                    // Deceased player: only collected if year <= death year and age >= 45
+                    collected = year <= deathYear && age >= 45;
+                } else {
+                    // Living player: collected if past/current and would be 45+
+                    collected = (isPast || isCurrent) && age >= 45;
+                }
+                
+                if (collected) {
+                    totalCollected += Math.round(amount);
+                } else if (isAfterDeath) {
+                    totalMissed += Math.round(amount);
+                }
+                
+                // Don't show years after death
+                if (!isAfterDeath) {
                     schedule.push({
                         year,
                         age,
                         amount: Math.round(amount),
                         isPast,
                         isCurrent,
-                        isFuture,
+                        isFuture: isFuture && !deathYear,
+                        isDeathYear,
+                        collected,
                         status: age >= 62 ? 'Max Benefit' : 'Early Retirement'
                     });
                 }
             }
             
-            return schedule;
+            return { schedule, totalCollected, totalMissed };
         }
 
-        // Get current year pension amount
+        // Get current year pension amount (0 if deceased)
         function getCurrentPension(player) {
             if (!player.e || !player.a || player.a < 45) return 0;
+            if (player.d && player.d < CURRENT_YEAR) return 0; // Deceased before this year
             return getPensionAtAge(player['62'], Math.min(player.a, 62));
+        }
+
+        // Get total pension collected by a deceased player
+        function getTotalCollected(player) {
+            if (!player.e || !player.b) return 0;
+            const { totalCollected } = generatePensionSchedule(player);
+            return totalCollected;
         }
 
         function createRankingRow(player, rank) {
             const currentPension = getCurrentPension(player);
-            const schedule = generatePensionSchedule(player);
+            const { schedule, totalCollected } = generatePensionSchedule(player);
+            const isDeceased = !!player.d;
+            const birthYear = player.b ? parseInt(player.b.split('-')[0]) : null;
+            const deathAge = (isDeceased && birthYear) ? player.d - birthYear : null;
+            const diedBeforePension = isDeceased && deathAge && deathAge < 45;
             
-            // Calculate total collected and future
-            let totalCollected = 0;
-            let totalFuture = 0;
-            schedule.forEach(s => {
-                if (s.isPast || s.isCurrent) totalCollected += s.amount;
-                if (s.isFuture) totalFuture += s.amount;
-            });
+            // For deceased players, show total collected instead of current
+            const displayAmount = isDeceased ? totalCollected : currentPension;
+            const amountLabel = isDeceased ? 'total collected' : CURRENT_YEAR + ' pension';
+            const amountClass = isDeceased ? 'pension-amount total-collected' : 'pension-amount';
+
+            let deathNotice = '';
+            if (isDeceased) {
+                if (diedBeforePension) {
+                    deathNotice = `<div class="death-notice">✝ <strong>Passed away in ${player.d}</strong> at age ${deathAge}, before reaching pension eligibility age (45).</div>`;
+                } else {
+                    const yearsCollected = Math.max(0, player.d - (birthYear + 45) + 1);
+                    deathNotice = `<div class="death-notice">✝ <strong>Passed away in ${player.d}</strong> at age ${deathAge}. Collected pension for approximately ${yearsCollected} years.</div>`;
+                }
+            }
 
             const scheduleHtml = schedule.slice(0, 30).map(s => `
-                <div class="year-row ${s.isCurrent ? 'current-year' : ''} ${s.isFuture ? 'future' : ''}">
-                    <div class="year">${s.year}</div>
+                <div class="year-row ${s.isCurrent ? 'current-year' : ''} ${s.isFuture ? 'future' : ''} ${s.isDeathYear ? 'death-year' : ''}">
+                    <div class="year">${s.year}${s.isDeathYear ? ' ✝' : ''}</div>
                     <div class="age-info">Age ${s.age} • ${s.status}</div>
                     <div class="amount">${formatCurrency(s.amount)}</div>
                 </div>
             `).join('');
 
+            const ageDisplay = isDeceased 
+                ? `Died age ${deathAge}` 
+                : (player.a ? `Age ${player.a.toFixed(0)}` : '?');
+            const ageClass = isDeceased ? 'current-age deceased-age' : 'current-age';
+
             return `
-                <div class="ranking-row" data-player="${player.n}">
+                <div class="ranking-row ${isDeceased ? 'deceased' : ''}" data-player="${player.n}">
                     <div class="ranking-main">
                         <div class="rank-number">${rank}</div>
                         <div class="player-info">
@@ -856,17 +953,18 @@
                             <div class="meta">${player.f || '?'}-${player.l || '?'} • ${player.po || '-'}</div>
                         </div>
                         <div class="years-badge">${player.y} yrs</div>
-                        <div class="current-age">Age ${player.a ? player.a.toFixed(0) : '?'}</div>
-                        <div class="pension-amount">
-                            ${formatCurrency(currentPension)}
-                            <span class="year-label">${CURRENT_YEAR} pension</span>
+                        <div class="${ageClass}">${ageDisplay}</div>
+                        <div class="${amountClass}">
+                            ${formatCurrency(displayAmount)}
+                            <span class="year-label">${amountLabel}</span>
                         </div>
                     </div>
                     <div class="year-schedule">
                         <div class="schedule-header">
                             <div class="schedule-title">📅 Year-by-Year Pension Schedule</div>
-                            <div class="schedule-total">Est. Lifetime: ${formatCurrencyShort(totalCollected + totalFuture)}</div>
+                            <div class="schedule-total">Total: ${formatCurrencyShort(totalCollected)}</div>
                         </div>
+                        ${deathNotice}
                         ${scheduleHtml}
                     </div>
                 </div>
@@ -874,50 +972,8 @@
         }
 
         function createAllPlayerRow(player, rank) {
-            const currentPension = player.cc ? getCurrentPension(player) : 0;
-            const schedule = generatePensionSchedule(player);
-            
-            let scheduleHtml = '';
-            if (player.e && schedule.length > 0) {
-                scheduleHtml = schedule.slice(0, 25).map(s => `
-                    <div class="year-row ${s.isCurrent ? 'current-year' : ''} ${s.isFuture ? 'future' : ''}">
-                        <div class="year">${s.year}</div>
-                        <div class="age-info">Age ${s.age} • ${s.status}</div>
-                        <div class="amount">${formatCurrency(s.amount)}</div>
-                    </div>
-                `).join('');
-            } else if (!player.e) {
-                scheduleHtml = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">Not eligible for pension (less than 3 years of service)</div>';
-            } else {
-                scheduleHtml = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">Birth date unknown - cannot calculate schedule</div>';
-            }
-
-            const statusText = player.cc ? formatCurrency(currentPension) : (player.e ? 'Not yet 45' : 'Not eligible');
-            const statusClass = player.cc ? 'pension-amount' : 'current-age';
-
-            return `
-                <div class="ranking-row" data-player="${player.n}">
-                    <div class="ranking-main">
-                        <div class="rank-number">${rank}</div>
-                        <div class="player-info">
-                            <div class="name">${player.n}</div>
-                            <div class="meta">${player.f || '?'}-${player.l || '?'} • ${player.y} seasons</div>
-                        </div>
-                        <div class="years-badge">${player.y} yrs</div>
-                        <div class="current-age">Age ${player.a ? player.a.toFixed(0) : '?'}</div>
-                        <div class="${statusClass}">
-                            ${statusText}
-                            ${player.cc ? '<span class="year-label">' + CURRENT_YEAR + '</span>' : ''}
-                        </div>
-                    </div>
-                    <div class="year-schedule">
-                        <div class="schedule-header">
-                            <div class="schedule-title">📅 Pension Schedule</div>
-                        </div>
-                        ${scheduleHtml}
-                    </div>
-                </div>
-            `;
+            // Reuse the same logic
+            return createRankingRow(player, rank);
         }
 
         function renderRankings(reset = false) {
@@ -1005,17 +1061,27 @@
         }
 
         function updateStats() {
-            const collecting = allPlayers.filter(p => p.cc && p.e);
-            const maxBenefit = allPlayers.filter(p => p.a >= 62 && p.e);
+            // Living players currently collecting (age 45+)
+            const livingCollecting = allPlayers.filter(p => p.cc && p.e && !p.d);
+            
+            // Deceased players who collected any pension
+            const deceasedCollected = allPlayers.filter(p => {
+                if (!p.e || !p.d || !p.b) return false;
+                const birthYear = parseInt(p.b.split('-')[0]);
+                const deathAge = p.d - birthYear;
+                return deathAge >= 45; // They collected at least something
+            });
+            
             const eligible = allPlayers.filter(p => p.e);
             
+            // Total 2025 payouts (only living players)
             let totalPayout = 0;
-            collecting.forEach(p => {
+            livingCollecting.forEach(p => {
                 totalPayout += getCurrentPension(p);
             });
 
-            document.getElementById('totalCollecting').textContent = collecting.length.toLocaleString();
-            document.getElementById('maxBenefitCount').textContent = maxBenefit.length.toLocaleString();
+            document.getElementById('totalCollecting').textContent = livingCollecting.length.toLocaleString();
+            document.getElementById('deceasedCollected').textContent = deceasedCollected.length.toLocaleString();
             document.getElementById('totalEligible').textContent = eligible.length.toLocaleString();
             document.getElementById('totalPayout').textContent = formatCurrencyShort(totalPayout);
         }
@@ -1034,11 +1100,35 @@
                 return;
             }
 
-            // Filter for ranking: eligible, can collect now (45+), sorted by current pension
+            // Calculate metrics for sorting
+            allPlayers = allPlayers.map(p => {
+                const current = getCurrentPension(p);
+                const { totalCollected } = generatePensionSchedule(p);
+                return { 
+                    ...p, 
+                    currentPension: current,
+                    totalCollected: totalCollected
+                };
+            });
+
+            // Ranking: Players who have collected/are collecting, sorted by:
+            // - Living players by current pension
+            // - Include deceased who collected, sorted by total collected
             rankingPlayers = allPlayers
-                .filter(p => p.e && p.cc && p.a >= 45)
-                .map(p => ({ ...p, currentPension: getCurrentPension(p) }))
-                .sort((a, b) => b.currentPension - a.currentPension);
+                .filter(p => {
+                    if (!p.e) return false;
+                    if (!p.d) return p.cc && p.a >= 45; // Living and can collect
+                    // Deceased: check if they reached 45
+                    if (!p.b) return false;
+                    const birthYear = parseInt(p.b.split('-')[0]);
+                    return (p.d - birthYear) >= 45;
+                })
+                .sort((a, b) => {
+                    // Sort living by current, deceased by total
+                    const aVal = a.d ? a.totalCollected : a.currentPension;
+                    const bVal = b.d ? b.totalCollected : b.currentPension;
+                    return bVal - aVal;
+                });
 
             filteredRankings = [...rankingPlayers];
             filteredAll = [...allPlayers];
